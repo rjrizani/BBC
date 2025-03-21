@@ -4,14 +4,13 @@ import random
 from src.convert_file import save_article_to_csv, save_links_to_csv
 from src.scraping_page import extract_article_content
 import logging
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 BASE_URL = "https://www.bbc.com"
-START_URL = f"{BASE_URL}/business"
+START_URL = f"{BASE_URL}/travel"
 
 def process_article(link_data):
     try:
@@ -19,7 +18,7 @@ def process_article(link_data):
         article_data = extract_article_content(link_data['link'])
         
         if article_data:
-            save_article_to_csv(article_data, filename="articles_4.csv")
+            save_article_to_csv(article_data, filename="articles_5.csv")
             logging.info(f"Article saved: {article_data['title']}")
             return True
         return False
@@ -76,7 +75,7 @@ def scrape_page(url):
         logging.info(f"Extraction complete. Successfully extracted {successful_extractions} articles.")
         logging.info(f"Failed to extract {failed_extractions} articles.")
 
-        save_links_to_csv(all_links, name='links_article_4.csv')
+        save_links_to_csv(all_links, name='links_article_5.csv')
         logging.info("Links saved to links_article_.csv")
 
     except requests.exceptions.RequestException as e:
