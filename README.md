@@ -2,6 +2,8 @@
 
 This project is designed for web scraping articles from the BBC website, specifically starting from the business section.
 
+Articles was scraped with BeautifulSoup for parsing HTML content and curl_cffi for browser impersonation.
+
 ## Key Features:
 
 1.  **Imports**:
