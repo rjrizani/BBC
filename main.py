@@ -26,6 +26,7 @@ def process_article(link_data):
         logging.error(f"Error processing article {link_data['link']}: {str(e)}")
         return False
 
+
 def scrape_page(url):
     """
     Scrapes a single page for article links and extracts/saves article content.
@@ -33,7 +34,7 @@ def scrape_page(url):
     try:
         browser = random.choice(["chrome", "firefox", "safari", "edge"])
         response = requests.get(url, impersonate=browser)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        response.raise_for_status()
         html_content = response.content
         soup = BeautifulSoup(html_content, 'html.parser')
 
@@ -41,22 +42,19 @@ def scrape_page(url):
         for a_tag in soup.find_all('a', href=True):
             link = a_tag['href']
             title = a_tag.get_text(strip=True)
-            if title and ("/article/" in link or '/news/articles/' in link):  # only accept link with /article/
+            if title and ("/article/" in link or '/news/articles/' in link):
                 full_link = link if link.startswith("http") else f"{BASE_URL}{link}"
                 all_links.append({'title': title, 'link': full_link})
                 logging.info(f"Found link: {title} - {full_link}")
-
-                
 
         logging.info(f"Number of links found: {len(all_links)}")
         for i in range(min(5, len(all_links))):
             logging.info(all_links[i])
 
-        # Extract article content from all links
         successful_extractions = 0
         failed_extractions = 0
+        articles_json = []  # Collect articles for JSON
 
-        # Use ThreadPoolExecutor for parallel processing
         with ThreadPoolExecutor(max_workers=10) as executor:
             future_to_link = {executor.submit(process_article, link_data): link_data 
                             for link_data in all_links}
@@ -64,24 +62,33 @@ def scrape_page(url):
             for future in as_completed(future_to_link):
                 link_data = future_to_link[future]
                 try:
-                    if future.result():
+                    result = future.result()
+                    if result:
                         successful_extractions += 1
+                        # Extract article content again for JSON (or refactor process_article to return data)
+                        article_data = extract_article_content(link_data['link'])
+                        if article_data:
+                            articles_json.append(article_data)
                     else:
                         failed_extractions += 1
                 except Exception as e:
                     logging.error(f"Error processing article {link_data['link']}: {str(e)}")
                     failed_extractions += 1
 
+        # Save all articles to JSON
+        import json
+        with open("articles_5.json", "a", encoding="utf-8") as f:
+            json.dump(articles_json, f, ensure_ascii=False, indent=2)
+
         logging.info(f"Extraction complete. Successfully extracted {successful_extractions} articles.")
         logging.info(f"Failed to extract {failed_extractions} articles.")
-
-        save_links_to_csv(all_links, name='links_article_5.csv')
-        logging.info("Links saved to links_article_.csv")
 
     except requests.exceptions.RequestException as e:
         logging.error(f"Error fetching URL: {e}")
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
+
+
 
 if __name__ == "__main__":
     scrape_page(START_URL)
